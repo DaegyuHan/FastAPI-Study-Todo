@@ -24,6 +24,15 @@ todo_data = {
     }
 }
 
+# 할 일 전체 조회
 @app.get("/todos")
-def get_todos_handler():
-    return list(todo_data.values())
+def get_todos_handler(order: str | None = None):
+    ret = list(todo_data.values())
+    if order == "DESC":
+        return ret[::-1]
+    return ret
+
+# 할 일 단일 조회
+@app.get("/todos/{todo_id}")
+def get_todo_handler(todo_id: int):
+    return todo_data.get(todo_id, {})
