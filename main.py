@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from database.connection import get_db
-from database.repository import get_todos, get_todo_by_todo_id
+from database.repository import get_todos, get_todo_by_todo_id, create_todo
 
 from database.orm import ToDo
 
@@ -15,23 +15,6 @@ app = FastAPI()
 def health_check_handler():
     return {"ping":"pong"}
 
-# todo_data = {
-#     1: {
-#         "id": 1,
-#         "contents": "한대규의 오늘 할 일1",
-#         "is_done": True
-#     },
-#     2: {
-#         "id": 2,
-#         "contents": "한대규의 오늘 할 일2",
-#         "is_done": False
-#     },
-#     3: {
-#     "id": 3,
-#         "contents": "한대규의 오늘 할 일3",
-#         "is_done": False
-#     }
-# }
 
 # 할 일 전체 조회
 @app.get("/todos", status_code=200)
@@ -65,9 +48,14 @@ def get_todo_handler(
 
 # 할 일 생성
 @app.post("/todos", status_code=201)
-def create_todo_handler(request: CreateTodoRequest):
-    todo_data[request.id] = request.dict()
-    return
+def create_todo_handler(
+        request: CreateTodoRequest,
+        session: Session = Depends(get_db),
+) -> ToDoSchema:
+    todo = ToDo.create(request=request) # id None
+    todo: ToDo = create_todo(session=session, todo=todo)    # id int
+    return ToDoSchema.from_orm(todo)
+
 
 # 할 일 수정
 @app.patch("/todos/{todo_id}", status_code=200)

@@ -2,6 +2,5 @@ from pydantic import BaseModel
 
 
 class CreateTodoRequest(BaseModel):
-    id: int
-    content: str
+    contents: str
     is_done: bool
