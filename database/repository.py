@@ -15,3 +15,9 @@ def create_todo(session: Session, todo: ToDo) -> ToDo:
     session.commit() # db 저장
     session.refresh(instance=todo) # id 를 가져오기 위함
     return todo
+
+def update_todo(session: Session, todo: ToDo) -> ToDo:
+    session.add(instance=todo)
+    session.commit() # db 저장
+    session.refresh(instance=todo) # id 를 가져오기 위함
+    return todo
