@@ -9,5 +9,5 @@ class ToDoSchema(BaseModel):
     class Config:
         from_attributes = True
 
-class ListToDoResponse(BaseModel):
+class ToDoListSchema(BaseModel):
     todos: List[ToDoSchema]
