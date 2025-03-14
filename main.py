@@ -62,7 +62,7 @@ def update_todo_handler(
     if todo:
         todo["is_done"] = is_done
         return todo
-    return HTTPException(status_code=404, detail="ToDo Not Found")
+    raise HTTPException(status_code=404, detail="ToDo Not Found")
 
 # 할 일 삭제
 @app.delete("/todos/{todo_id}", status_code=204)
