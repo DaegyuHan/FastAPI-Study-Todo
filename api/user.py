@@ -1,9 +1,11 @@
+from http.client import HTTPException
+
 from database.repository import UserRepository
 from fastapi import APIRouter, Depends
-from schema.response import UserSchema
+from schema.response import UserSchema,JWTResponse
 
 from service.user import UserService
-from schema.request import SignUpRequest
+from schema.request import SignUpRequest, SignInRequest
 from database.orm import User
 from database.repository import UserRepository
 
@@ -16,7 +18,7 @@ def user_sign_up_handler(
         user_service: UserService = Depends(),
         user_repo: UserRepository = Depends(),
 ):
-    # 1. requestbody(username, password)
+    # 1. request body(username, password)
     # 2. password -> hashing -> hashed_password
     hashed_password: str = user_service.hash_password(plain_password=request.password)
     # 4. user -> db save
@@ -25,3 +27,27 @@ def user_sign_up_handler(
     user: User = user_repo.save_user(user=user)
     # 5. return user(id, username)
     return UserSchema.from_orm(user)
+
+@router.post("/sign-in", status_code=200)
+def user_sign_in_handler(
+        request: SignInRequest,
+        user_service: UserService = Depends(),
+        user_repo: UserRepository = Depends(),
+):
+    # 1. request body(username, password)
+    # 2. db reader user
+    user: User | None = user_repo.get_user_by_username(username=request.username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User Not Found")
+
+    # 3. user.password, request.password -> bycrept.checkpw
+    verified: bool = user_service.verify_password(
+        plain_password=request.password,
+        hashed_password=user.password,
+    )
+    if not verified:
+        raise HTTPException(status_code=401, detail="Not Authorized")
+    # 4. create jwt
+    access_token: str = user_service.create_jwt(username=user.username)
+    # 5. return jwt
+    return JWTResponse(access_token=access_token)

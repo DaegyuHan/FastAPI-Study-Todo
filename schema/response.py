@@ -19,3 +19,6 @@ class UserSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+class JWTResponse(BaseModel):
+    access_token: str
