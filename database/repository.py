@@ -1,3 +1,4 @@
+from fastapi import Depends
 from sqlalchemy import select, delete
 from sqlalchemy.orm import Session
 from typing import List
