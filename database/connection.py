@@ -5,7 +5,7 @@ from database.orm import Base
 DATABASE_URL = "mysql+pymysql://root:todos@127.0.0.1:3306/todos"
 
 
-engine = create_engine(DATABASE_URL, echo=True)
+engine = create_engine(DATABASE_URL)
 SessionFactory = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # 데이터베이스 연결 및 테이블 생성
