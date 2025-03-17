@@ -3,11 +3,13 @@ from http.client import HTTPException
 from database.repository import UserRepository
 from fastapi import APIRouter, Depends
 from schema.response import UserSchema,JWTResponse
+from security import get_access_token
 
 from service.user import UserService
-from schema.request import SignUpRequest, SignInRequest
+from schema.request import SignUpRequest, SignInRequest, CreateOTPRequest
 from database.orm import User
 from database.repository import UserRepository
+from tests.cache import redis_client
 
 
 router = APIRouter(prefix="/users")
@@ -51,3 +53,20 @@ def user_sign_in_handler(
     access_token: str = user_service.create_jwt(username=user.username)
     # 5. return jwt
     return JWTResponse(access_token=access_token)
+
+@router.post("/email/otp")
+def create_otp_handler(
+        request: CreateOTPRequest,
+        _ = Depends(get_access_token),
+        user_service: UserService = Depends(),
+):
+    otp: int = user_service.create_otp()
+
+    redis_client.set(request.email, otp)
+    redis_client.expire(request.email, 3*60)
+
+    return {"otp": otp}
+
+@router.post("/email/otp/verify")
+def verify_otp_handler():
+    return
