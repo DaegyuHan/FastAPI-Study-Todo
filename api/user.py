@@ -1,7 +1,7 @@
 import logging
 
 from database.repository import UserRepository
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from schema.response import UserSchema,JWTResponse
 from security import get_access_token
 
@@ -72,6 +72,7 @@ def create_otp_handler(
 @router.post("/email/otp/verify")
 def verify_otp_handler(
         request: VerifyOTPRequest,
+        background_tasks: BackgroundTasks,
         access_token: str = Depends(get_access_token),
         user_service: UserService = Depends(),
         user_repo: UserRepository = Depends()
@@ -98,4 +99,8 @@ def verify_otp_handler(
 
     user: User = user.update_email(request.email)
 
+    background_tasks.add_task(
+        user_service.send_email_to_user,
+        email=user.email
+    )
     return UserSchema.from_orm(user)
