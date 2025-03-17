@@ -1,15 +1,17 @@
-from http.client import HTTPException
+import logging
 
 from database.repository import UserRepository
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from schema.response import UserSchema,JWTResponse
 from security import get_access_token
 
 from service.user import UserService
-from schema.request import SignUpRequest, SignInRequest, CreateOTPRequest
+from schema.request import SignUpRequest, SignInRequest, CreateOTPRequest, VerifyOTPRequest
 from database.orm import User
 from database.repository import UserRepository
 from tests.cache import redis_client
+
+logging.basicConfig(level=logging.INFO)
 
 
 router = APIRouter(prefix="/users")
@@ -68,5 +70,32 @@ def create_otp_handler(
     return {"otp": otp}
 
 @router.post("/email/otp/verify")
-def verify_otp_handler():
-    return
+def verify_otp_handler(
+        request: VerifyOTPRequest,
+        access_token: str = Depends(get_access_token),
+        user_service: UserService = Depends(),
+        user_repo: UserRepository = Depends()
+) -> UserSchema:
+    otp: str | None = redis_client.get(request.email)
+    if not otp:
+        raise HTTPException(status_code=400, detail="Bad Request")
+
+    if request.otp != int(otp):
+        logging.error(
+            "OTP 불일치 - 요청된 OTP: %s (타입: %s), 저장된 OTP: %s (타입: %s)",
+            str(request.otp), type(request.otp), str(otp), type(otp)
+        )
+        raise HTTPException(
+            status_code=400,
+            detail="Bad Request ( otp 불일치 ) " + str(request.otp) + " != " + str(otp)
+        )
+
+    username: str = user_service.decode_jwt(access_token=access_token)
+
+    user: User | None = user_repo.get_user_by_username(username=username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User Not Found")
+
+    user: User = user.update_email(request.email)
+
+    return UserSchema.from_orm(user)

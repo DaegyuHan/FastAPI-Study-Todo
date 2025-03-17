@@ -39,6 +39,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(256), nullable=False)
     password = Column(String(256), nullable=False)
+    email = Column(String(256), nullable=True)
     todos = relationship("ToDo", lazy="joined")
 
     @classmethod
@@ -47,3 +48,7 @@ class User(Base):
             username=username,
             password=hashed_password,
         )
+
+    def update_email(self, email: str):
+        self.email = email
+        return self

@@ -15,3 +15,7 @@ class SignInRequest(BaseModel):
 
 class CreateOTPRequest(BaseModel):
     email: str
+
+class VerifyOTPRequest(BaseModel):
+    email: str
+    otp: int

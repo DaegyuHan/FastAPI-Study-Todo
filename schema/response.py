@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 class ToDoSchema(BaseModel):
     id: int
@@ -16,6 +16,7 @@ class ToDoListSchema(BaseModel):
 class UserSchema(BaseModel):
     id: int
     username: str
+    email: Optional[str]
 
     class Config:
         from_attributes = True
